@@ -1,101 +1,70 @@
 import "./style.css";
-import { Component } from "react";
+import { Component, useEffect, useState } from "react";
 
 import { TextInput } from "../../TextInput";
 import { Posts } from "../../Posts";
 import { loadPosts } from "../../../utils/loadPosts/loadPosts";
 import { Button } from "../../Button";
 
-class Home extends Component {
-  state = {
-    posts: [],
-    allPosts: [],
-    page: 0,
-    postsPerPage: 10,
-    searchValue: "",
-  };
+const Home = () => {
+  const [posts, setPosts] = useState([]);
+  const [allPosts, setAllPosts] = useState([]);
+  const [page, setPage] = useState(0);
+  const [postsPerpage, setPostsPerPage] = useState(10);
+  const [searchValue, setSearchValue] = useState("");
 
-  async componentDidMount() {
-    await this.loadPosts();
-  }
+  const noMorePosts = page + postsPerpage >= allPosts.length;
 
-  loadPosts = async () => {
+  const filteredPosts = !!searchValue
+    ? allPosts.filter((post) => {
+        return post.title.toLowerCase().includes(searchValue.toLowerCase());
+      })
+    : posts;
+
+  useEffect(() => {
+    handleLoadPosts();
+  }, []);
+  const handleLoadPosts = async () => {
     const postAndPhoto = await loadPosts();
-    const { page, postsPerPage } = this.state;
     // colocando a união das api no state
-    this.setState({
-      posts: postAndPhoto.slice(page, postsPerPage),
-      allPosts: postAndPhoto,
-    });
+
+    setPosts(postAndPhoto.slice(page, postsPerpage));
+    setAllPosts(postAndPhoto);
   };
 
-  loadMorePosts = () => {
-    const { page, postsPerPage, allPosts, posts } = this.state;
-    const nextPages = page + postsPerPage;
-    const nextPosts = allPosts.slice(nextPages, nextPages + postsPerPage);
+  const loadMorePosts = () => {
+    const nextPages = page + postsPerpage;
+    const nextPosts = allPosts.slice(nextPages, nextPages + postsPerpage);
     posts.push(...nextPosts);
 
-    this.setState({ posts, page: nextPages });
+    setPosts(posts);
+    setPage(nextPages);
   };
 
-  handleChange = (e) => {
+  const handleChange = (e) => {
     const { value } = e.target;
-    this.setState({ searchValue: value });
+    setSearchValue(value);
   };
-  render() {
-    const { posts, page, postsPerPage, allPosts, searchValue } = this.state;
-    const noMorePosts = page + postsPerPage >= allPosts.length;
 
-    const filteredPosts = !!searchValue
-      ? allPosts.filter((post) => {
-          return post.title.toLowerCase().includes(searchValue.toLowerCase());
-        })
-      : posts;
-    return (
-      <section className="container">
-        <TextInput searchValue={searchValue} handleChange={this.handleChange} />
-        <br />
-        <br />
-        <br />
-        <br />
+  return (
+    <section className="container">
+      <TextInput searchValue={searchValue} handleChange={handleChange} />
 
-        {filteredPosts.length > 0 && <Posts posts={filteredPosts} />}
+      {filteredPosts.length > 0 && <Posts posts={filteredPosts} />}
 
-        {filteredPosts.length === 0 && <h3>Nenhum Post encontrado =(</h3>}
+      {filteredPosts.length === 0 && <h3>Nenhum Post encontrado =(</h3>}
 
-        {!searchValue && (
-          <div className="button-container">
-            <Button
-              text={"Load more post"}
-              onClick={this.loadMorePosts}
-              disabled={noMorePosts}
-            />
-          </div>
-        )}
-      </section>
-    );
-  }
-}
-
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
+      {!searchValue && (
+        <div className="button-container">
+          <Button
+            text={"carregar mais posts"}
+            onClick={loadMorePosts}
+            disabled={noMorePosts}
+          />
+        </div>
+      )}
+    </section>
+  );
+};
 
 export default Home;
