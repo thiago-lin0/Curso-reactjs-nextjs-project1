@@ -1,5 +1,5 @@
 import "./style.css";
-import { Component, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { TextInput } from "../../TextInput";
 import { Posts } from "../../Posts";
